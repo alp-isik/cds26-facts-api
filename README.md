@@ -1,29 +1,32 @@
 # facts-api
 
-An Express API with one endpoint and none of the machinery around it. This is the starting point for the BED2 Cloud and Deployment Services course assignment.
+An Express API that returns random facts, built for the BED2 Cloud and Deployment Services CA. It is tested, containerised, and deployed to Azure App Service through a GitHub Actions pipeline.
 
-The full brief is in [cds-spec.md](cds-spec.md). Read it before changing anything.
+## Endpoints
+
+| Endpoint      | Returns                                              |
+| ------------- | ---------------------------------------------------- |
+| `GET /health` | `{ "status": "ok", "environment": "<ENVIRONMENT>" }` |
+| `GET /fact`   | `{ "fact": "<a random fact>" }`                      |
 
 ## Running it
 
+Copy `.env.example` to `.env` and set `ENVIRONMENT`, then:
+
 ```bash
 npm install
-npm start
+npm start        # http://localhost:3000
+npm test         # jest + supertest
 ```
 
-It listens on port 3000.
+With Docker Compose:
 
-| Endpoint | Returns |
-|---|---|
-| `GET /health` | `{ "status": "ok", "environment": "default" }` |
+```bash
+docker compose up --build
+```
 
-## What is missing
+## Deployment
 
-All of it is missing on purpose, and putting it there is the assignment:
+Every push to `main` runs the tests, then builds the image and pushes it to Azure Container Registry, tagged `latest` and the short commit SHA. A registry webhook tells App Service to pull the new `latest` and restart.
 
-- The `environment` value in the `/health` response is a literal in the source.
-- There is no `dotenv`, and nothing loads the `.env` file that is sitting in the repository.
-- There is no `.gitignore`, which is why that `.env` is committed, along with the fake API key in it.
-- There is no `Dockerfile`, no `.dockerignore`, no Compose file and no workflow.
-- There are no tests, and no test framework in `package.json`.
-- There are no facts.
+Live at https://facts-alpisi06018.azurewebsites.net/fact
