@@ -1,0 +1,15 @@
+{
+    "name": "facts-api",
+    "version": "1.0.0",
+    "description": "An API that will one day serve facts.",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.21.2"
+    }
+}
