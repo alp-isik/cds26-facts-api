@@ -6,11 +6,11 @@
 
 ## 1. Front matter
 
-| Field           | Your answer                                         |
-| --------------- | --------------------------------------------------- |
-| Name            | Alp ISIK                                            |
-| Noroff username | alpisi06018                                         |
-| Repository URL  | https://https://github.com/alp-isik/cds26-facts-api |
+| Field           | Your answer                                 |
+| --------------- | ------------------------------------------- |
+| Name            | Alp ISIK                                    |
+| Noroff username | alpisi06018                                 |
+| Repository URL  | https://github.com/alp-isik/cds26-facts-api |
 
 The repository must be private, with `NicholasLennox` added as a Contributor. Only commits made before the deadline count.
 
@@ -96,7 +96,11 @@ Configuration can be fixed into an image when it is built, or supplied to a cont
 
 **Answer:**
 
-_Your answer here._
+Build-time configuration is fixed into the image when it is built, for example with an ENV line in the Dockerfile or by copying a .env file into it. Every container started from that image gets the same values, and changing one means rebuilding and pushing the image again. Run-time configuration is supplied when the container starts, through docker run -e, the environment: block in Compose, or app settings in App Service. The image stays the same and only the values around it change.
+
+My setup shows this. The same image reported "default" under a plain docker run, "local" under Compose and "production" on App Service, without being rebuilt in between. The CI test job works the same way, since it sets ENVIRONMENT itself instead of reading a file.
+
+Anything deployed generally uses run-time configuration for three reasons. First, the image that was tested is the exact image that runs in every environment, so nothing changes between testing and production. Second, it keeps secrets out of the image: anyone who can pull an image can read its layers, which is why .env is listed in my .dockerignore. Third, changing a setting only needs a restart, not a new build and deploy.
 
 ### 3.2 Question 2 - Dev dependencies in two places (2 marks)
 
@@ -106,7 +110,9 @@ Your Dockerfile installs production dependencies only, so the image contains no 
 
 **Answer:**
 
-_Your answer here._
+The two installs happen in different places for different jobs. The CI test job installs everything on a GitHub runner, a temporary virtual machine, and runs npm test there, so it needs Jest and SuperTest. The image only has to run the finished app, which needs Express and dotenv and nothing else. The tests have already done their work before the image is built, and in production those files would sit untouched.
+
+If the two are swapped, the CI job installs production dependencies only, Jest is missing, and npm test fails. The test job goes red, and since build-and-push declares needs: test, nothing is built or deployed. The image would still run, but it would carry the testing tools into production: a bigger image that takes more storage, pulls more slowly, and adds packages that could contain vulnerabilities.
 
 ### 3.3 Question 3 - From a push to a live URL (5 marks)
 
@@ -118,7 +124,13 @@ You can submit a diagram as part of this answer. If you do, label the arrows wit
 
 **Answer:**
 
-_Your answer here. If you are including a diagram, put it here as an image._
+It starts when I run git push to main. That push is the trigger for my GitHub Actions workflow, because CI.yml is set to run on pushes to the main branch. For this to happen, the file has to sit in .github/workflows/ and I need push access to the repository.
+
+The workflow runs two jobs. The test job starts first on a fresh GitHub runner: it checks out the code, sets up Node, installs every dependency and runs npm test, with ENVIRONMENT set in the job itself since there is no .env file on the runner. The build-and-push job only starts because it declares needs: test, so it runs only if every test passes. It logs in to my Azure Container Registry using three repository secrets, which only works if the secrets are correct and the registry's admin user is enabled. It then builds the image from my Dockerfile, tags it twice, as latest and as the 7-character commit SHA, and pushes both tags to the facts-api repository in the registry.
+
+The push to the registry is the next trigger. The registry has a webhook with the action push and the scope facts-api:latest, so when the new latest tag arrives, the registry sends a request to my App Service. This only happens because the scope matches the tag exactly, and because the webhook exists at all: Azure created it when I turned on continuous deployment, which requires SCM basic authentication to be enabled on the app.
+
+When App Service accepts that request, it pulls the new facts-api:latest image from the registry, using the DOCKER_REGISTRY_SERVER settings stored on the app to authenticate. It then stops the old container and starts a new one from the new image, which takes a few minutes. The new container reads ENVIRONMENT=production from the app settings and listens on port 3000, and App Service forwards traffic from the public URL to it. From that point the new code, such as the /fact endpoint, answers requests at facts-alpisi06018.azurewebsites.net.
 
 ### 3.4 Question 4 - Reading a webhook response (3 marks)
 
@@ -128,7 +140,11 @@ Your registry's webhook event log shows a `202` against your most recent push. W
 
 **Answer:**
 
-_Your answer here._
+A 202 means Accepted. When my registry received the new facts-api:latest image, the webhook sent a request to my App Service's deployment endpoint, and App Service answered 202: it received the request, the credentials in it were valid, and it has queued a redeploy.
+
+What has not happened yet is the actual deployment. At the moment the 202 comes back, App Service has not pulled the new image, has not restarted the container, and the new code is not live. Those steps happen afterwards and take a few minutes, and they can still fail, for example if the image cannot be pulled or the new container crashes on startup. A 202 only proves the message was delivered and accepted, not that the deploy succeeded. To see what happened after it, I would watch the Deployment Center logs, the log stream, or Kudu under Advanced Tools, which show the pull and the container start in detail.
+
+A 401 would mean Unauthorized: the request reached App Service, but the credentials in the webhook were rejected, so no deploy was queued at all. The first thing I would check is that SCM basic authentication is still enabled on the app, since the webhook depends on it. If it is on, the deployment credentials may have changed since the webhook was created, so I would save the Deployment Center settings again to have Azure regenerate the webhook with current credentials.
 
 ### 3.5 Question 5 - The same system on another provider (3 marks)
 
@@ -138,11 +154,16 @@ The same application could be delivered on AWS or on Google Cloud. Pick one. Nam
 
 **Answer:**
 
-_Your answer here._
+I would pick AWS. I have not used it before, but reading the documentation, most of my setup carries over as the same thing under a different name. The application code, the Dockerfile and the test job would not change at all. The image would go to Amazon Elastic Container Registry (ECR) instead of Azure Container Registry, and it would be hosted on Amazon ECS Express Mode instead of App Service. Express Mode takes a container image and gives back a running service with a public URL, load balancing and scaling, which is the same job App Service does for me now. AWS's older App Service equivalent, App Runner, no longer accepts new customers, and AWS points to Express Mode instead.
+
+The part that actually changes shape is how the pipeline logs in. In my Azure setup, the workflow logs in to the registry with a username and password that I copied from the portal and saved as GitHub secrets. On AWS, the recommended way is that no password is stored at all. The pipeline's identity is an IAM role that trusts GitHub, and for each workflow run GitHub hands the job a short-lived token that AWS exchanges for temporary credentials. Even the Docker login to ECR uses a token that expires after 12 hours. So the steps in my workflow would look almost the same, but instead of storing a secret, I would set up trust between GitHub and AWS once, and the credentials would never live anywhere permanently.
 
 **Citation:**
 
-_The provider documentation you used, by title and link._
+- AWS, "Amazon ECS Express Mode", https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-overview.html
+- AWS, "AWS App Runner availability change", https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html
+- GitHub, "Configuring OpenID Connect in Amazon Web Services", https://docs.github.com/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
+- AWS, "Private registry authentication in Amazon ECR", https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html
 
 ### 3.6 Question 6 - What the SLA actually promises (2 marks)
 
@@ -152,11 +173,17 @@ Find the SLA for Azure App Service on a paid tier. State the committed monthly u
 
 **Answer:**
 
-_Your answer here._
+An SLA, or Service Level Agreement, is the provider's written promise about how available a service will be, and what the customer gets if that promise is broken.
+
+For Azure App Service on a paid tier, Microsoft commits to 99.95% monthly uptime. In a 30-day month (43,200 minutes), that allows about 21.6 minutes of downtime before the commitment is broken.
+
+If Microsoft misses it, the customer does not get money back directly. Instead they can claim a service credit, a discount on that month's App Service bill: roughly 10% for a small miss, rising for bigger outages, up to the full month for severe ones. The credit has to be claimed; it is not applied automatically.
+
+The SLA does not cover the Free and Shared tiers at all, so my own app on the F1 tier has no uptime commitment. It also does not cover downtime caused by factors outside Microsoft's reasonable control, or by the customer's own code or configuration, such as a container that crashes on startup.
 
 **Citation:**
 
-_The document you read, by title and link._
+Microsoft, "Service Level Agreement for Microsoft Online Services (WW)", September 2026, https://www.microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services
 
 ### 3.7 Question 7 - Where the gate sits (2 marks)
 
@@ -166,7 +193,11 @@ Your workflow runs on push to `main`. That does not stop broken code reaching `m
 
 **Answer:**
 
-_Your answer here._
+Right now my workflow only runs after code is already on main, so broken code can already be sitting on the branch everyone works from. The pipeline stops it from being deployed, but not from reaching main.
+
+If the same workflow runs on pull requests into main, the tests run on the proposed change before it is merged. Combined with a branch protection rule that requires the test job to pass, a pull request with failing tests cannot be merged. The build-and-push job should still only run on pushes to main, otherwise unreviewed code from a pull request would be pushed as latest and deployed automatically.
+
+This protects main from code that fails the tests. It does not protect against bugs the tests do not check for, or against problems outside the code, such as a wrong secret or a missing app setting in Azure.
 
 ## 4. Part C: the quiz (10 marks)
 
@@ -182,6 +213,7 @@ Two articles are published in the same week. One is headed "Microsoft leads the 
 - **D.** Estimates move each quarter, so the two were measured at different times.
 
 **Answer:**
+C
 
 ### 4.2 Question 2
 
@@ -193,6 +225,7 @@ A dental practice moves its appointment system from IaaS to PaaS. Which responsi
 - **D.** Choosing how much capacity to pay for.
 
 **Answer:**
+A
 
 ### 4.3 Question 3
 
@@ -204,6 +237,7 @@ A seed bank's IT lead tells the board that the organisation is "moving to the pu
 - **D.** Deployment model says who else is on the hardware; service model says how much of the stack you rent, and neither implies the other.
 
 **Answer:**
+D
 
 ### 4.4 Question 4
 
@@ -215,6 +249,7 @@ A laundrette chain runs its booking system on PaaS. A customer list leaks after 
 - **D.** The provider, because the SLA was not met while data was exposed.
 
 **Answer:**
+B
 
 ### 4.5 Question 5
 
@@ -226,6 +261,7 @@ A bookbinder's accountant is pleased that moving to a cloud provider turned a la
 - **D.** An owned asset written off over its life, replaced by a cost that never ends.
 
 **Answer:**
+D
 
 ### 4.6 Question 6
 
@@ -237,6 +273,7 @@ A wind farm's monitoring team runs six services, each in its own container, on o
 - **D.** There are seven, once the host's own is counted.
 
 **Answer:**
+B
 
 ### 4.7 Question 7
 
@@ -248,6 +285,7 @@ A fish market's price-feed API listens on port 4000, and its Dockerfile contains
 - **D.** `EXPOSE` takes effect only when the image is run through Compose.
 
 **Answer:**
+A
 
 ### 4.8 Question 8
 
@@ -259,6 +297,7 @@ A choir-booking API builds without error, but the image comes out at 900 MB and 
 - **D.** `--omit=dev` was missing, so the dev dependencies ended up in the image.
 
 **Answer:**
+C
 
 ### 4.9 Question 9
 
@@ -270,6 +309,7 @@ A tide-table API is a single service with no database. `docker run -e ENVIRONMEN
 - **D.** It restarts the container automatically whenever the source changes.
 
 **Answer:**
+B
 
 ### 4.10 Question 10
 
@@ -281,6 +321,7 @@ An insurance claims desk's pipeline pushes every build to the registry tagged `l
 - **D.** App Service stores only the image it is running, so the old one is gone.
 
 **Answer:**
+C
 
 ### 4.11 Answer grid
 
@@ -288,14 +329,14 @@ This grid is what is marked. If it disagrees with a letter you wrote above, the 
 
 | Q          | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | 10  |
 | ---------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **Answer** |     |     |     |     |     |     |     |     |     |     |
+| **Answer** | C   | A   | D   | B   | D   | B   | A   | C   | B   | C   |
 
 ## 5. Before you submit
 
-- [ ] Every italic placeholder replaced, and the eleven screenshots are images.
-- [ ] The repository link at the top works, and `NicholasLennox` is a Contributor.
-- [ ] Screenshot 9 is the `202` against your **most recent** push, not an earlier row.
-- [ ] Questions 5 and 6 each carry a citation.
-- [ ] The answer grid in §4.11 has ten letters in it.
-- [ ] Exported as one PDF, named `<noroff-username>_CDS_CA_1.pdf`.
-- [ ] The `CDS26` resource group is still there. Delete it **after** you submit.
+- [x] Every italic placeholder replaced, and the eleven screenshots are images.
+- [x] The repository link at the top works, and `NicholasLennox` is a Contributor.
+- [x] Screenshot 9 is the `202` against your **most recent** push, not an earlier row.
+- [x] Questions 5 and 6 each carry a citation.
+- [x] The answer grid in §4.11 has ten letters in it.
+- [x] Exported as one PDF, named `alpisi06018_CDS_CA_1.pdf`.
+- [x] The `CDS26` resource group is still there. Delete it **after** you submit.
