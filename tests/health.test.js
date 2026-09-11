@@ -15,3 +15,14 @@ describe("GET /health", () => {
     expect(response.body.environment).not.toBe("default");
   });
 });
+
+describe("GET /fact", () => {
+  it("responds with 200", async () => {
+    const response = await request(app).get("/fact");
+    expect(response.status).toBe(200);
+  });
+  it("returns a fact", async () => {
+    const response = await request(app).get("/fact");
+    expect(typeof response.body.fact).toBe("string");
+  });
+});
