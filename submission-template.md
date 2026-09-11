@@ -6,11 +6,11 @@
 
 ## 1. Front matter
 
-| Field | Your answer |
-|---|---|
-| Name | *your full name* |
-| Noroff username | *the part of your Noroff email before the `@`* |
-| Repository URL | *https://github.com/your-username/cds26-facts-api* |
+| Field           | Your answer                                         |
+| --------------- | --------------------------------------------------- |
+| Name            | Alp ISIK                                            |
+| Noroff username | alpisi06018                                         |
+| Repository URL  | https://https://github.com/alp-isik/cds26-facts-api |
 
 The repository must be private, with `NicholasLennox` added as a Contributor. Only commits made before the deadline count.
 
@@ -20,67 +20,67 @@ Eleven screenshots, numbered and in order. Put each image where its placeholder 
 
 ### 2.1 Screenshot 1 - Tests passing locally
 
-*Stage 2. The command and the summary line both visible.*
+_Stage 2. The command and the summary line both visible._
 
 ![Screenshot 1](images/screenshot-01.png)
 
 ### 2.2 Screenshot 2 - Compose running, `/health` reporting `local`
 
-*Stage 4. One image with both windows visible is preferred. Two separate images are accepted.*
+_Stage 4. One image with both windows visible is preferred. Two separate images are accepted._
 
 ![Screenshot 2](images/screenshot-02.png)
 
 ### 2.3 Screenshot 3 - The Actions run
 
-*Stage 5. Both jobs green, with `test` shown before `build-and-push`.*
+_Stage 5. Both jobs green, with `test` shown before `build-and-push`._
 
 ![Screenshot 3](images/screenshot-03.png)
 
 ### 2.4 Screenshot 4 - The ACR repository
 
-*Stage 5. Both tags, `latest` and the 7-character short SHA, against the same build.*
+_Stage 5. Both tags, `latest` and the 7-character short SHA, against the same build._
 
 ![Screenshot 4](images/screenshot-04.png)
 
 ### 2.5 Screenshot 5 - The Environment variables blade
 
-*Stage 6. The registry credentials and `ENVIRONMENT`.*
+_Stage 6. The registry credentials and `ENVIRONMENT`._
 
 ![Screenshot 5](images/screenshot-05.png)
 
 ### 2.6 Screenshot 6 - The Deployment Center
 
-*Stage 6. Continuous deployment enabled, and the image and tag being pulled.*
+_Stage 6. Continuous deployment enabled, and the image and tag being pulled._
 
 ![Screenshot 6](images/screenshot-06.png)
 
 ### 2.7 Screenshot 7 - The registry's Webhooks blade
 
-*Stage 6. The webhook and its scope.*
+_Stage 6. The webhook and its scope._
 
 ![Screenshot 7](images/screenshot-07.png)
 
 ### 2.8 Screenshot 8 - `/health` on the App Service URL
 
-*Stage 6. Reporting `production`.*
+_Stage 6. Reporting `production`._
 
 ![Screenshot 8](images/screenshot-08.png)
 
 ### 2.9 Screenshot 9 - The webhook event log
 
-*Stage 7. A `202` against your most recent push.*
+_Stage 7. A `202` against your most recent push._
 
 ![Screenshot 9](images/screenshot-09.png)
 
 ### 2.10 Screenshot 10 - `/fact` on the App Service URL
 
-*Stage 7.*
+_Stage 7._
 
 ![Screenshot 10](images/screenshot-10.png)
 
 ### 2.11 Screenshot 11 - Cost analysis for `CDS26`
 
-*Stage 8. Scoped to the year, with the accumulated cost and the forecast both visible. A zero, or a dash where a figure would be, is a complete answer.*
+_Stage 8. Scoped to the year, with the accumulated cost and the forecast both visible. A zero, or a dash where a figure would be, is a complete answer._
 
 ![Screenshot 11](images/screenshot-11.png)
 
@@ -90,27 +90,27 @@ The mark value tells you how much to write. The guide length is a guide, not a l
 
 ### 3.1 Question 1 - Build-time and run-time configuration (3 marks)
 
-*~ 150-250 words.*
+_~ 150-250 words._
 
 Configuration can be fixed into an image when it is built, or supplied to a container when it is run. Explain the difference between the two, and why run-time configuration is what anything deployed generally uses.
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 ### 3.2 Question 2 - Dev dependencies in two places (2 marks)
 
-*~ 100-150 words.*
+_~ 100-150 words._
 
 Your Dockerfile installs production dependencies only, so the image contains no dev dependencies. Your CI workflow installs everything, so the test job has them. Explain why both of those are correct, and say what specifically goes wrong in each place if the two are swapped.
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 ### 3.3 Question 3 - From a push to a live URL (5 marks)
 
-*~ 300-400 words, or a diagram plus 150.*
+_~ 300-400 words, or a diagram plus 150._
 
 Describe everything that happens between a developer running `git push` and the new code answering requests on the public URL, in the setup you built. Name what triggers each step, and what would have to be true for that step to happen at all.
 
@@ -118,55 +118,55 @@ You can submit a diagram as part of this answer. If you do, label the arrows wit
 
 **Answer:**
 
-*Your answer here. If you are including a diagram, put it here as an image.*
+_Your answer here. If you are including a diagram, put it here as an image._
 
 ### 3.4 Question 4 - Reading a webhook response (3 marks)
 
-*~ 150-250 words.*
+_~ 150-250 words._
 
 Your registry's webhook event log shows a `202` against your most recent push. What has happened at the moment that status is returned, and what has not? What would a `401` mean instead, and what would you check first?
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 ### 3.5 Question 5 - The same system on another provider (3 marks)
 
-*~ 200-300 words, plus citations.*
+_~ 200-300 words, plus citations._
 
 The same application could be delivered on AWS or on Google Cloud. Pick one. Name the service you would use at each step of the workflow you built - registry, hosting, and the identity the pipeline authenticates with - and identify at least one place where the shape of the work changes rather than just the name.
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 **Citation:**
 
-*The provider documentation you used, by title and link.*
+_The provider documentation you used, by title and link._
 
 ### 3.6 Question 6 - What the SLA actually promises (2 marks)
 
-*~ 100-200 words, plus a citation.*
+_~ 100-200 words, plus a citation._
 
 Find the SLA for Azure App Service on a paid tier. State the committed monthly uptime and what that allows in minutes of downtime per month. Say what you receive if the provider misses it, and name one thing the SLA does not cover.
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 **Citation:**
 
-*The document you read, by title and link.*
+_The document you read, by title and link._
 
 ### 3.7 Question 7 - Where the gate sits (2 marks)
 
-*~ 100-150 words.*
+_~ 100-150 words._
 
 Your workflow runs on push to `main`. That does not stop broken code reaching `main`. Explain what changes if the same workflow runs on pull requests into `main` instead. What does that protect against, and what does it still not protect against?
 
 **Answer:**
 
-*Your answer here.*
+_Your answer here._
 
 ## 4. Part C: the quiz (10 marks)
 
@@ -286,9 +286,9 @@ An insurance claims desk's pipeline pushes every build to the registry tagged `l
 
 This grid is what is marked. If it disagrees with a letter you wrote above, the grid wins.
 
-| Q | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **Answer** | | | | | | | | | | |
+| Q          | 1   | 2   | 3   | 4   | 5   | 6   | 7   | 8   | 9   | 10  |
+| ---------- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **Answer** |     |     |     |     |     |     |     |     |     |     |
 
 ## 5. Before you submit
 

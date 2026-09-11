@@ -1,16 +1,21 @@
 {
-    "name": "facts-api",
-    "version": "1.0.0",
-    "description": "An API that will one day serve facts.",
-    "main": "src/server.js",
-    "scripts": {
-        "start": "node src/server.js"
-    },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "dependencies": {
-        "dotenv": "^17.4.2",
-        "express": "^4.21.2"
-    }
+  "name": "facts-api",
+  "version": "1.0.0",
+  "description": "An API that will one day serve facts.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "jest": "^30.5.1",
+    "supertest": "^7.2.2"
+  }
 }
