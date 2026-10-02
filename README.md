@@ -29,4 +29,4 @@ docker compose up --build
 
 Every push to `main` runs the tests, then builds the image and pushes it to Azure Container Registry, tagged `latest` and the short commit SHA. A registry webhook tells App Service to pull the new `latest` and restart.
 
-Live at https://facts-alpisi06018.azurewebsites.net/fact
+The app was deployed at `https://facts-alpisi06018.azurewebsites.net` for the assignment. That deployment is no longer running.
